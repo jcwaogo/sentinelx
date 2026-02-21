@@ -17,10 +17,17 @@ import java.util.Arrays;
 @Slf4j
 public class AuditEventAspect {
 
+    Long start_time;
+
     AuditEventRepository auditEventRepository;
     @Autowired
     public AuditEventAspect(AuditEventRepository auditEventRepository) {
         this.auditEventRepository = auditEventRepository;
+    }
+
+    @Before("execution(* net.jco.sentinelx.core..*Controller(..))")
+    public void temps_demarrage(JoinPoint joinPoint){
+        start_time = System.currentTimeMillis();
     }
 
     @AfterReturning(
@@ -37,6 +44,7 @@ public class AuditEventAspect {
                 .methodSignature(joinPoint.getSignature().toShortString())
                 .resultSummary(result != null ? result.toString() : "void")
                 .argsSummary(Arrays.toString(joinPoint.getArgs()))
+                .durationMs(System.currentTimeMillis() - start_time)
                 .build();
 
         auditEventRepository.save(entry);
